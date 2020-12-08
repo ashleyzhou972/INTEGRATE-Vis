@@ -240,7 +240,7 @@ class PANEL_B:
     def find_best_transcript(self, gene_ID, strand, side):
         description = subprocess.check_output("grep %s %s | awk '$3 == \"transcript\"' | cut -f4,5,9" % (gene_ID, self.gene_model_dir_2), shell = True).rstrip('\n').split('\n')
         description[:] = [transcript.split('\t') for transcript in description]
-        description = [[transcript[0], transcript[1], dict([info.replace('"', '').split(' ') for info in transcript[2].rstrip(';').split('; ')])] for transcript in description]
+        description = [[transcript[0], transcript[1], dict([info.replace('"', '').split(' ')[0:2] for info in transcript[2].rstrip(';').split('; ')])] for transcript in description]
 
         TR_ID_list = [transcript[2]['transcript_id'] for transcript in description]
 
@@ -284,7 +284,7 @@ class PANEL_B:
         # chr number, start, end, exon number
         exon_list = subprocess.check_output("grep %s %s | awk '$3 == \"exon\"' | cut -f1,4,5,9" % (TR_ID, self.gene_model_dir_2), shell = True).rstrip("\n").split("\n")
         exon_list[:] = [exon.split('\t') for exon in exon_list]
-        exon_list = [[exon[0], exon[1], exon[2], dict([info.replace('"', '').split(' ') for info in exon[3].rstrip(';').split('; ')])] for exon in exon_list]
+        exon_list = [[exon[0], exon[1], exon[2], dict([info.replace('"', '').split(' ')[0:2] for info in exon[3].rstrip(';').split('; ')])] for exon in exon_list]
         exon_list[:] = [(exon[0], int(exon[1]), int(exon[2]), exon[3]['exon_number']) for exon in exon_list]
         exon_list.sort(key = lambda x: x[1])
 
@@ -448,11 +448,18 @@ class PANEL_B:
         included_domain_list = []
 
         fusion_cut = (self.TR_fragment_length_5 - self.five_p_utr_length_5) if side == '5' else (self.TR_length_3 - self.TR_fragment_length_3 - self.five_p_utr_length_3)    # in bp
+        #print("gene: " + side + "p")
+        #print('fusion_cut:')
+        #print(fusion_cut)
 
         for domain in domain_list:
             domain_start = int(domain[2]) * 3  # in bp
 
             domain_end = int(domain[3]) * 3  # in bp
+            #print('domain_start:')
+            #print(domain_start)
+            #print('domain_end:')
+            #print(domain_end)
             is_included = (domain_end < fusion_cut) if side == '5' else (domain_start > fusion_cut)
 
             if is_included:
@@ -472,7 +479,7 @@ class PANEL_B:
 
     def label_domains(self):
         utr_label_x = self.graphic_protein_x + 0.1
-        utr_label_y = 1.75
+        utr_label_y = 1.4
         domain_lengend_figure_width = 0.05
         line_width = 0.07
         plt.text(utr_label_x, utr_label_y + domain_lengend_figure_width, "UTR", fontsize = self.font_size, ha = 'left', va = 'top')
@@ -547,12 +554,12 @@ class PANEL_B:
 
     def draw_right_legend(self):
 
-        right_lengend_x = 1.4
-        right_legend_1_y = 1.75
+        right_lengend_x = 1.6
+        right_legend_1_y = 1.4
         right_legend_2_y = right_legend_1_y - 0.2
         right_legend_3_y = right_legend_2_y - 0.2
-        right_legend_4_y = 0.9
-        right_legend_5_y = 0.7
+        #right_legend_4_y = 0.9
+        #right_legend_5_y = 0.7
 
         plt.text(right_lengend_x, right_legend_1_y, "Fusion Junction", fontsize = self.font_size, ha = 'left')
         plt.text(right_lengend_x, right_legend_2_y, "Termination", fontsize = self.font_size, ha = 'left')
@@ -702,7 +709,7 @@ def main(argv):
     panel.fig = plt.figure()
     panel.ax = panel.fig.add_subplot(111, aspect='equal')
     panel.ax.set_xlim([0, 2])
-    panel.ax.set_ylim([0, 2])
+    panel.ax.set_ylim([0, 1.7])
     plt.axis('on')
     #print "TIME$$$$$$$$$$$$$$$$$$aaaa",time.time()-t
     #t=time.time()
@@ -722,6 +729,8 @@ def main(argv):
     #print "TIME$$$$$$$$$$$$$$$$$$eeee",time.time()-t
     #t=time.time()
     panel.fusion_exon_list_5 = panel.get_fusion_exons(panel.strand_5, '5', panel.fusion_point_5, panel.exons_5)
+    #print('exon_list_5')
+    #print(panel.fusion_exon_list_5)
     panel.fusion_exon_list_3 = panel.get_fusion_exons(panel.strand_3, '3', panel.fusion_point_3, panel.exons_3)
     #print "TIME$$$$$$$$$$$$$$$$$$ffff",time.time()-t
     #t=time.time()
@@ -754,10 +763,10 @@ def main(argv):
     #print "TIME$$$$$$$$$$$$$$$$$$2222222",time.time()-t
     #t=time.time()
 
-    #print("all domains on the five prime gene:")
-    #print(panel.domain_list_5)
-    #print("all domains on the three prime gene:")
-    #print(panel.domain_list_3)
+    print("all domains on the five prime gene:")
+    print(panel.domain_list_5)
+    print("all domains on the three prime gene:")
+    print(panel.domain_list_3)
 
     panel.domain_colors = panel.gen_color()
     panel.included_domain_list_5 = panel.draw_domains('5', panel.domain_list_5)

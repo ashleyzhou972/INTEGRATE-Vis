@@ -190,6 +190,7 @@ class PANEL_A:
         self.in_frame_TRs_5 = [TR[:15] for TR in transcript_lists[0]]
         self.in_frame_TRs_3 = transcript_lists[1]
         self.out_frame_TRs_3 = transcript_lists[2]
+	#print(self.in_frame_TRs_5)
 
 
 
@@ -370,7 +371,8 @@ class PANEL_A:
     def find_best_transcript(self, gene_ID, strand, side):
         description = subprocess.check_output("grep %s %s | awk '$3 == \"transcript\"' | cut -f4,5,9" % (gene_ID, self.gene_model_dir_2), shell = True).rstrip('\n').split('\n')
         description[:] = [transcript.split('\t') for transcript in description]
-        description = [[transcript[0], transcript[1], dict([info.replace('"', '').split(' ') for info in transcript[2].rstrip(';').split('; ')])] for transcript in description]
+        description = [[transcript[0], transcript[1], dict([info.replace('"', '').split(' ')[0:2] for info in transcript[2].rstrip(';').split('; ')])] for transcript in description]
+        #print(description)
         # description[:] = [re.split('; |\t', x) for x in description]
         # for transcript in description:
         #     transcript[:] = [x.split(' ') for x in transcript]
@@ -410,6 +412,7 @@ class PANEL_A:
             min_dist_from_fusion.append(min(distances))
 
         in_frame = [int(ID in self.in_frame_TRs_5) for ID in TR_ID_list] if side == '5' else [int(ID in self.in_frame_TRs_3) for ID in TR_ID_list]
+	#print(in_frame)
 
         TR_list = zip(TR_ID_list, biotype, in_frame, min_dist_from_fusion, tsl, length)
         #TR_list.sort(key = lambda x: ((x[1] != 'trans_coding'), x[2], x[3], -x[4]))
@@ -427,8 +430,10 @@ class PANEL_A:
 
         # chr number, start, end, exon number
         exon_list = subprocess.check_output("grep %s %s | awk '$3 == \"exon\"' | cut -f1,4,5,9" % (TR_ID, self.gene_model_dir_2), shell = True).rstrip("\n").split("\n")
+	print("exon list\n")
+        print(exon_list)
         exon_list[:] = [exon.split('\t') for exon in exon_list]
-        exon_list = [[exon[0], exon[1], exon[2], dict([info.replace('"', '').split(' ') for info in exon[3].rstrip(';').split('; ')])] for exon in exon_list]
+        exon_list = [[exon[0], exon[1], exon[2], dict([info.replace('"', '').split(' ')[0:2] for info in exon[3].rstrip(';').split('; ')])] for exon in exon_list]
         exon_list[:] = [(exon[0], int(exon[1]), int(exon[2]), exon[3]['exon_number']) for exon in exon_list]
         exon_list.sort(key = lambda x: x[1])
 
